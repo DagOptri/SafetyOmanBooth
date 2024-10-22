@@ -1,10 +1,11 @@
-# Use DeepStream 7.0 base image
+# Use DeepStream 7.0 Triton base image
 FROM nvcr.io/nvidia/deepstream:7.0-gc-triton-devel
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/local/cuda/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
+ENV PYTHONPATH=/opt/nvidia/deepstream/deepstream-7.0/lib/python3.8/
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -22,6 +23,12 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Install CUDA Python package
+RUN pip3 install --upgrade pip && \
+    pip3 install nvidia-cuda-runtime-cu11 nvidia-cuda-nvrtc-cu11 cuda-python && \
+    pip3 install numpy pyyaml && \
+    pip3 install pyds
+
 # Create app directory
 WORKDIR /app
 
@@ -30,22 +37,11 @@ COPY app/* ./
 COPY app/utils ./utils/
 COPY data ./data/
 
-# Set up Python environment
-RUN pip3 install --upgrade pip
-RUN pip3 install numpy pyyaml
-
-# Environment variables for DeepStream
-ENV GST_PLUGIN_PATH=/opt/nvidia/deepstream/deepstream-7.0/lib/gst-plugins/
-ENV GST_DEBUG=3
-
 # Make the export script executable
 RUN chmod +x export_int8.sh
 
-# Set the working directory
-WORKDIR /app
-
-# Set the default command to run the Python script
-CMD ["python3", "main.py"]
+# Set the default command
+CMD ["/bin/bash"]
 
 # Labels
 LABEL maintainer="ddagaev222"
