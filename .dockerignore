@@ -1,0 +1,6 @@
+echo "Dockerfile
+.git
+__pycache__
+*.pyc
+.dockerignore
+README.md" > .dockerignore
